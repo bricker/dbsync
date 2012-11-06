@@ -11,12 +11,16 @@ Support for more things will happen if anybody needs it.
 
 ## Usage
 
-Add to your gemfile:
+Add to your gemfile in the `development` group:
 
-    gem 'dbsync'
-
+    group :development do
+      gem 'dbsync'
+    end
+    
 Add the following to your `config/environments/development.rb` 
-file:
+file. Depending on your staging setup, it may also be useful 
+to you to add some `dbsync` config to your `staging.rb` 
+environment file. **Note** `dbsync` will not run in production.
 
     config.dbsync = ActiveSupport::OrderedOptions.new
 
@@ -34,7 +38,9 @@ server updating that dumpfile. I recommend a cronjob:
 You will need proper SSH access into the remote server, 
 as the tasks use `rsync` and `scp` directly.
 
-Run `rake -T dbsync` for all of the available tasks:
+Run `rake -T dbsync` for all of the available tasks. The 
+tasks are named after `git` commands mostly, so they
+should be pretty straight-forward for those who use `git`:
 
     rake dbsync             # Alias for dbsync:pull
     rake dbsync:clone       # Copy the remote dump file, reset the local database, and load in the dump file
