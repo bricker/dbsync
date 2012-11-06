@@ -11,9 +11,9 @@ Support for more things will happen if anybody needs it.
 
 ## Usage
 
-Add to your gemfile in the `development` group:
+Add to your gemfile for the groups that will need it:
 
-    group :development do
+    group :development, :staging do
       gem 'dbsync'
     end
     
