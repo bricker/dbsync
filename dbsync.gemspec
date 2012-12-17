@@ -2,14 +2,14 @@
 $:.push File.expand_path("../lib", __FILE__)
 require "dbsync/version"
 
-Gem::Specification.new do |s|
-  s.name        = "dbsync"
-  s.version     = Dbsync::VERSION
-  s.authors     = ["Bryan Ricker"]
-  s.email       = ["bricker88@gmail.com"]
-  s.homepage    = "http://github.com/bricker88/dbsync"
-  s.summary     = %q{Easy syncing from remote to development database in Rails.}
-  s.description = %q{A set of rake tasks to help you sync your remote production data with your local database for development.}
+Gem::Specification.new do |gem|
+  gem.name        = "dbsync"
+  gem.version     = Dbsync::VERSION
+  gem.authors     = ["Bryan Ricker"]
+  gem.email       = ["bricker88@gmail.com"]
+  gem.description = %q{A set of rake tasks to help you sync your remote production data with your local database for development.}
+  gem.summary     = %q{Easy syncing from remote to development database in Rails.}
+  gem.homepage    = "http://github.com/bricker/dbsync"
 
   s.rubyforge_project = "dbsync"
 
