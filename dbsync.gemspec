@@ -21,7 +21,7 @@ Gem::Specification.new do |gem|
   # specify any dependencies here; for example:
   # s.add_development_dependency "rspec"
   gem.add_runtime_dependency "activesupport", ">= 3.2.8"
-  gem.add_runtime_dependency "activerecord", "=> 3.2.8"
-  gem.add_runtime_dependency "railties", "=> 3.2.8"
+  gem.add_runtime_dependency "activerecord", ">= 3.2.8"
+  gem.add_runtime_dependency "railties", ">= 3.2.8"
 
 end
