@@ -18,8 +18,10 @@ Gem::Specification.new do |gem|
   gem.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   gem.require_paths = ["lib", "lib/tasks"]
 
-  s.add_runtime_dependency "activesupport", ">= 3.2.8"
-  s.add_runtime_dependency "activerecord", "=> 3.2.8"
-  s.add_runtime_dependency "railties", "=> 3.2.8"
+  # specify any dependencies here; for example:
+  # s.add_development_dependency "rspec"
+  gem.add_runtime_dependency "activesupport", ">= 3.2.8"
+  gem.add_runtime_dependency "activerecord", "=> 3.2.8"
+  gem.add_runtime_dependency "railties", "=> 3.2.8"
 
 end
