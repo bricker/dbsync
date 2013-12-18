@@ -44,7 +44,7 @@ module Dbsync
 
     # Update the local database with the local dump file.
     def merge
-      notify "Dumping data from '#{@local_file}' into '#{@db_database}'"
+      notify "Dumping data from '#{@local_file}' into '#{@db_database}'..."
 
       options = ""
       options += "-u :username " if @db_username.present?
