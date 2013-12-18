@@ -1,4 +1,5 @@
 require "dbsync/version"
+require 'dbsync/sync'
 
 module Dbsync
   class Railtie < Rails::Railtie
