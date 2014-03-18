@@ -58,6 +58,14 @@ rake dbsync:pull        # Update the local dump file, and merge it into the loca
 rake dbsync:reset       # Drop and Create the database, then load the dump file
 ```
 
+
+### Caveats
+
+* The `merge` process doesn't clear out your database first. This is to improve performance. Therefore, any tables which you removed on the remote host won't be removed locally. To do a complete reset of your database, run `rake dbsync:reset`. This resets your database (`db:drop` and `db:create`), and then merges in the local file.
+* The test database isn't automatically updated when syncing to your development database. After a `dbsync` and before you run tests, you'll need to run `rake db:test:prepare` to setup your database.
+* Your schema.rb isn't involed in `dbsync` at all. You need to manage it yourself.
+
+
 ### TODO
 
 - Support postgres, sqlite, and anything else.
