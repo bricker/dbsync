@@ -21,7 +21,7 @@ namespace :dbsync do
       end
     end
 
-    @dbsync = Dbsync::Sync.new(remote_config, db_config, verbose: true)
+    @dbsync = Dbsync::Sync.new(file_config, db_config, verbose: true)
   end
 
 
@@ -29,7 +29,7 @@ namespace :dbsync do
   task :config => :setup do
     # We don't use Sync.notify here because we don't want or need
     # the extra output that comes with it.
-    $stdout.puts remote_config.to_yaml
+    $stdout.puts file_config.to_yaml
   end
 
 
@@ -83,8 +83,8 @@ def db_config
   raise "No database configuration found."
 end
 
-def remote_config
-  return Dbsync.remote_config if Dbsync.remote_config
+def file_config
+  return Dbsync.file_config if Dbsync.file_config
   return Rails.application.config.dbsync if defined?(Rails)
   raise "No remote configuration found."
 end
