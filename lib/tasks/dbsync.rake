@@ -5,20 +5,23 @@ task :dbsync do
   Rake::Task['dbsync:pull'].invoke
 end
 
+if !defined?(Rails)
+  # Dummy task
+  task :environment
+end
+
 namespace :dbsync do
   task :setup => :environment do
-    Dbsync::Sync.notify "Environment: #{Rails.env}"
+    if defined?(Rails)
+      Dbsync::Sync.notify "Rails Environment: #{Rails.env}"
 
-    if Rails.env == 'production'
-      raise "These tasks are destructive and shouldn't " \
-            "be used in the production environment."
+      if Rails.env == 'production'
+        raise "These tasks are destructive and shouldn't " \
+              "be used in the production environment."
+      end
     end
 
-    @dbsync = Dbsync::Sync.new(
-      Rails.application.config.dbsync,
-      ActiveRecord::Base.configurations[Rails.env],
-      verbose: true
-    )
+    @dbsync = Dbsync::Sync.new(remote_config, db_config, verbose: true)
   end
 
 
@@ -26,7 +29,7 @@ namespace :dbsync do
   task :config => :setup do
     # We don't use Sync.notify here because we don't want or need
     # the extra output that comes with it.
-    $stdout.puts Rails.application.config.dbsync.to_yaml
+    $stdout.puts remote_config.to_yaml
   end
 
 
@@ -68,4 +71,20 @@ namespace :dbsync do
     Rake::Task["db:create"].invoke
     @dbsync.merge
   end
+end
+
+
+# If Dbsync.config was explicitly set, use it.
+# If Rails is defined, use the dbsync configuration there.
+# Otherwise, raise an error.
+def db_config
+  return Dbsync.db_config if Dbsync.db_config
+  return ActiveRecord::Base.configurations[Rails.env] if defined?(Rails)
+  raise "No database configuration found."
+end
+
+def remote_config
+  return Dbsync.remote_config if Dbsync.remote_config
+  return Rails.application.config.dbsync if defined?(Rails)
+  raise "No remote configuration found."
 end

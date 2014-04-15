@@ -1,4 +1,5 @@
 require 'cocaine'
+require 'fileutils'
 
 module Dbsync
   class Sync
@@ -10,46 +11,68 @@ module Dbsync
 
 
     def initialize(ssh_config, db_config, options={})
-      ssh_config  = ssh_config.with_indifferent_access
-      db_config   = db_config.with_indifferent_access
+      ssh_config  = symbolize_keys(ssh_config)
+      db_config   = symbolize_keys(db_config)
 
       @verbose = !!options[:verbose]
-
-      @remote_host  = ssh_config[:remote_host] || raise_missing("remote_host")
-      @remote_dir   = ssh_config[:remote_dir]  || raise_missing("remote_dir")
-      @local_dir    = ssh_config[:local_dir]   || raise_missing("local_dir")
-      @filename     = ssh_config[:filename]    || raise_missing("filename")
 
       @db_username  = db_config[:username]
       @db_password  = db_config[:password]
       @db_host      = db_config[:host]
       @db_database  = db_config[:database]
 
-      @remote_file = "#{@remote_host}:" + File.join(@remote_dir, @filename)
-      @local_file  = File.expand_path(File.join(@local_dir, @filename))
+      @remote   = ssh_config[:remote]
+      @local    = File.expand_path(ssh_config[:local]) if ssh_config[:local]
+
+      if !@remote
+        $stdout.puts "DEPRECATED: The remote_host, remote_dir, and filename " \
+          "options will be removed. " \
+          "Instead, combine remote_host, remote_dir, and filename into a " \
+          "single 'remote' configuration. Example: " \
+          "'{ remote: \"dbuser@100.0.1.100:~/dbuser/yourdb.dump\" }'"
+
+        remote_host = ssh_config[:remote_host]
+        remote_dir  = ssh_config[:remote_dir]
+        filename    = ssh_config[:filename]
+        @remote = "#{remote_host}:#{File.join(remote_dir, filename)}"
+      end
+
+      if !@local
+        $stdout.puts "DEPRECATED: The local_dir and filename " \
+          "options will be removed. " \
+          "Instead, combine local_dir and filename into a " \
+          "single 'local' configuration. Example: " \
+          "'{ local: \"../dbsync/yourdb.dump\" }'"
+
+        local_dir = ssh_config[:local_dir]
+        filename  = ssh_config[:filename]
+        @local  = File.expand_path(File.join(local_dir, filename))
+      end
     end
 
 
     # Update the local dump file from the remote source (using rsync).
     def fetch
-      notify "Updating '#{@local_file}' from '#{@remote_file}' via rsync..."
+      notify "Updating '#{@local}' from '#{@remote}' via rsync..."
+
+      FileUtils.mkdir_p(File.dirname(@local))
 
       line = Cocaine::CommandLine.new('rsync', '-v :remote :local')
       line.run({
-        :remote => @remote_file,
-        :local  => @local_file
+        :remote => @remote,
+        :local  => @local
       })
     end
 
 
     # Update the local database with the local dump file.
     def merge
-      notify "Dumping data from '#{@local_file}' into '#{@db_database}'..."
+      notify "Dumping data from '#{@local}' into '#{@db_database}'..."
 
       options = ""
-      options += "-u :username " if @db_username.present?
-      options += "-p:password "  if @db_password.present?
-      options += "-h :host "     if @db_host.present?
+      options += "-u :username " if @db_username
+      options += "-p:password "  if @db_password
+      options += "-h :host "     if @db_host
 
       line = Cocaine::CommandLine.new('mysql', "#{options} :database < :local")
       line.run({
@@ -57,7 +80,7 @@ module Dbsync
         :password   => @db_password,
         :host       => @db_host,
         :database   => @db_database,
-        :local      => @local_file
+        :local      => @local
       })
     end
 
@@ -70,20 +93,26 @@ module Dbsync
 
 
     # Copy the remote dump file to a local destination.
-    # This does a full copy (using scp), so it will take longer than
-    # fetch (which uses rsync).
+    # Instead of requiring two different tools (rsync and scp) for this
+    # library, instead we'll just remove the local file if it exists
+    # then run rsync, which is essentially a full copy.
     def clone_dump
-      notify "Copying '#{@remote_file}' into '#{@local_dir}' via scp..."
-
-      line = Cocaine::CommandLine.new('scp', ':remote :local_dir')
-      line.run({
-        :remote    => @remote_file,
-        :local_dir => @local_dir
-      })
+      notify "Copying '#{@remote}' into '#{@local}' via rsync..."
+      FileUtils.rm_f(@local)
+      fetch
     end
 
 
     private
+
+    def symbolize_keys(hash)
+      return hash unless hash.keys.any? { |k| k.is_a?(String) }
+
+      result = {}
+      hash.each_key { |k| result[k.to_sym] = hash[k] }
+      result
+    end
+
 
     def raise_missing(config="")
       raise "Missing Configuration: '#{config}'. " \
