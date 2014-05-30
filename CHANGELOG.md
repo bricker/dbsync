@@ -1,4 +1,4 @@
-## 0.3.0 (unreleased)
+## 0.3.0
 * Removed all Rails dependencies. Rails is now optional.
 * Removed scp usage. Everything uses rsync now.
 * Added Dbsync.file_config and Dbsync.db_config to manually set configuration.
