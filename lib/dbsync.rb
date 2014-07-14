@@ -1,7 +1,17 @@
+require 'cocaine'
+require 'archive'
+require 'fileutils'
+
 require "dbsync/version"
+require 'dbsync/util'
+require "dbsync/strategy"
+require "dbsync/importer"
 require 'dbsync/sync'
 
 module Dbsync
+  class ConfigError < StandardError
+  end
+
   if defined?(Rails)
     class Railtie < Rails::Railtie
       rake_tasks do

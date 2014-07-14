@@ -13,7 +13,7 @@ end
 namespace :dbsync do
   task :setup => :environment do
     if defined?(Rails)
-      Dbsync::Sync.notify "Rails Environment: #{Rails.env}"
+      Dbsync::Util.notify "Rails Environment: #{Rails.env}"
 
       if Rails.env == 'production'
         raise "These tasks are destructive and shouldn't " \
@@ -29,7 +29,7 @@ namespace :dbsync do
   task :config => :setup do
     # We don't use Sync.notify here because we don't want or need
     # the extra output that comes with it.
-    $stdout.puts file_config.to_yaml
+    Dbsync::Util.notify file_config
   end
 
 
@@ -42,7 +42,7 @@ namespace :dbsync do
   desc  "Copy the remote dump file, reset the local database, " \
         "and load in the dump file"
   task :clone => :setup do
-    @dbsync.clone_dump
+    @dbsync.fetch
     Rake::Task['dbsync:reset'].invoke
   end
 
@@ -50,12 +50,6 @@ namespace :dbsync do
   desc "Update the local dump file from the remote source."
   task :fetch => :setup do
     @dbsync.fetch
-  end
-
-
-  desc "Copy the remote dump file to a local destination"
-  task :clone_dump => :setup do
-    @dbsync.clone_dump
   end
 
 
@@ -80,11 +74,11 @@ end
 def db_config
   return Dbsync.db_config if Dbsync.db_config
   return ActiveRecord::Base.configurations[Rails.env] if defined?(Rails)
-  raise "No database configuration found."
+  raise Dbsync::ConfigError, "No database configuration found."
 end
 
 def file_config
   return Dbsync.file_config if Dbsync.file_config
   return Rails.application.config.dbsync if defined?(Rails)
-  raise "No remote configuration found."
+  raise Dbsync::ConfigError, "No remote configuration found."
 end

@@ -3,85 +3,48 @@ require 'fileutils'
 
 module Dbsync
   class Sync
-    class << self
-      def notify(message="")
-        $stdout.puts "[#{Time.now.strftime('%T')}] [dbsync] #{message}"
-      end
-    end
+    STRATEGY = {
+      :rsync    => Dbsync::Strategy::Rsync,
+      :curl   => Dbsync::Strategy::Curl
+    }
+
+    IMPORTER = {
+      :mysql => Dbsync::Importer::Mysql
+    }
 
 
-    def initialize(ssh_config, db_config, options={})
-      ssh_config  = symbolize_keys(ssh_config)
-      db_config   = symbolize_keys(db_config)
+    def initialize(file_config, db_config, options={})
+      @file_config  = Dbsync::Util.symbolize_keys(file_config)
+      @db_config   = Dbsync::Util.symbolize_keys(db_config)
 
       @verbose = !!options[:verbose]
 
-      @db_username  = db_config[:username]
-      @db_password  = db_config[:password]
-      @db_host      = db_config[:host]
-      @db_database  = db_config[:database]
+      @remote           = @file_config[:remote]
+      remote_filename   = File.basename(@remote)
 
-      @remote   = ssh_config[:remote]
-      @local    = File.expand_path(ssh_config[:local]) if ssh_config[:local]
+      @local          = File.expand_path(@file_config[:local])
+      local_dir       = File.dirname(@local)
+      @download       = File.join(local_dir, remote_filename)
 
-      if !@remote
-        $stdout.puts "DEPRECATED: The remote_host, remote_dir, and filename " \
-          "options will be removed. " \
-          "Instead, combine remote_host, remote_dir, and filename into a " \
-          "single 'remote' configuration. Example: " \
-          "'{ remote: \"dbuser@100.0.1.100:~/dbuser/yourdb.dump\" }'"
+      FileUtils.mkdir_p(local_dir)
 
-        remote_host = ssh_config[:remote_host]
-        remote_dir  = ssh_config[:remote_dir]
-        filename    = ssh_config[:filename]
-        @remote = "#{remote_host}:#{File.join(remote_dir, filename)}"
-      end
-
-      if !@local
-        $stdout.puts "DEPRECATED: The local_dir and filename " \
-          "options will be removed. " \
-          "Instead, combine local_dir and filename into a " \
-          "single 'local' configuration. Example: " \
-          "'{ local: \"../dbsync/yourdb.dump\" }'"
-
-        local_dir = ssh_config[:local_dir]
-        filename  = ssh_config[:filename]
-        @local  = File.expand_path(File.join(local_dir, filename))
-      end
+      @strategy = strategy.new(@remote, @download, @file_config[:bin_opts])
+      @importer = importer.new(@db_config, @local)
     end
 
 
     # Update the local dump file from the remote source (using rsync).
     def fetch
-      notify "Updating '#{@local}' from '#{@remote}' via rsync..."
-
-      FileUtils.mkdir_p(File.dirname(@local))
-
-      line = Cocaine::CommandLine.new('rsync', '-v :remote :local')
-      line.run({
-        :remote => @remote,
-        :local  => @local
-      })
+      notify "Downloading..."
+      @strategy.fetch
+      extract
     end
 
 
     # Update the local database with the local dump file.
     def merge
-      notify "Dumping data from '#{@local}' into '#{@db_database}'..."
-
-      options = ""
-      options += "-u :username " if @db_username
-      options += "-p:password "  if @db_password
-      options += "-h :host "     if @db_host
-
-      line = Cocaine::CommandLine.new('mysql', "#{options} :database < :local")
-      line.run({
-        :username   => @db_username,
-        :password   => @db_password,
-        :host       => @db_host,
-        :database   => @db_database,
-        :local      => @local
-      })
+      notify  "Importing..."
+      @importer.merge
     end
 
 
@@ -92,36 +55,62 @@ module Dbsync
     end
 
 
-    # Copy the remote dump file to a local destination.
-    # Instead of requiring two different tools (rsync and scp) for this
-    # library, instead we'll just remove the local file if it exists
-    # then run rsync, which is essentially a full copy.
-    def clone_dump
-      notify "Copying '#{@remote}' into '#{@local}' via rsync..."
-      FileUtils.rm_f(@local)
-      fetch
-    end
-
-
     private
 
-    def symbolize_keys(hash)
-      return hash unless hash.keys.any? { |k| k.is_a?(String) }
+    # TODO: There is a ruby library called "Archive" which can
+    # extract these much better for us. The only problem is that
+    # we can't specify a *filename* to extract to, which is
+    # important for us.
+    def extract
+      case @download
+      when /\.tar/   then untar
+      when /\.gz\z/  then gunzip
+      when /\.zip\z/ then unzip
+      end
+    end
 
-      result = {}
-      hash.each_key { |k| result[k.to_sym] = hash[k] }
-      result
+    # We're overwriting files by default. Is this okay? Probably not.
+    def gunzip
+      line = Cocaine::CommandLine.new('gunzip', "-c :download > :local")
+      line.run(download: @download, local: @local)
+    end
+
+    def untar
+      line = Cocaine::CommandLine.new('tar', "-C :local -xf :download")
+      line.run(download: @download, local: @local)
     end
 
 
-    def raise_missing(config="")
-      raise "Missing Configuration: '#{config}'. " \
-            "See README for required config."
+    def importer
+      IMPORTER[@file_config[:importer]] ||
+      IMPORTER[infer_importer_key]
     end
+
+    def infer_importer_key
+      case @db_config[:adapter]
+      when /mysql/ then :mysql
+      else raise Dbsync::ConfigError, "Only MySQL supported right now."
+      end
+    end
+
+
+    def strategy
+      STRATEGY[@file_config[:strategy]] ||
+      STRATEGY[infer_strategy_key]
+    end
+
+    # These matches could be a lot better.
+    def infer_strategy_key
+      case @remote
+      when /\A.+?@.+?:.+?/ then :rsync
+      else :curl
+      end
+    end
+
 
     def notify(*args)
       if @verbose
-        Sync.notify(*args)
+        Dbsync::Util.notify(*args)
       end
     end
   end

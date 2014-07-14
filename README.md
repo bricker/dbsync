@@ -24,8 +24,8 @@ Add the following to your `config/environments/development.rb` file. Depending o
 
 ```ruby
 config.dbsync = {
-  :remote => '66.123.4.567:~/dbsync/mydb.dump',
-  :local  => '../dbsync/mydb.dump'
+  :remote => 'dbuser@66.123.4.567:~/dbsync/mydb.dump',
+  :local  => '../dbsync/dbsync-yourapp.dump'
 }
 ```
 
@@ -37,7 +37,7 @@ You can also specify the dbsync configuration with `Dbsync.file_config` and `Dbs
 
 ```ruby
 Dbsync.file_config = {
-  :local => "../dbsync/dbsync.dump",
+  :local => "../dbsync/dbsync-yourapp.dump",
   :remote => "dbuser@100.0.100.100:~dbuser/dbsync.dump"
 }
 
@@ -66,7 +66,6 @@ Run `rake -T dbsync` for all of the available tasks. The tasks are named after `
 ```
 rake dbsync             # Alias for dbsync:pull
 rake dbsync:clone       # Copy the remote dump file, reset the local database, and load in the dump file
-rake dbsync:clone_dump  # Copy the remote dump file to a local destination
 rake dbsync:config      # Show the dbsync configuration
 rake dbsync:fetch       # Update the local dump file from the remote source
 rake dbsync:merge       # Update the local database with the local dump file
@@ -74,6 +73,34 @@ rake dbsync:pull        # Update the local dump file, and merge it into the loca
 rake dbsync:reset       # Drop and Create the database, then load the dump file
 ```
 
+
+### Download strategies
+`curl` and `rsync` are currently the only two supported options. You can pass a `strategy` option to the dbsync config (`:curl` or `:rsync`) to explicitly specify which strategy to use, or Dbsync will try to infer the strategy. Right now the strategy inference is a little dodgy, so it's best to just specify explicitly.
+
+```ruby
+config.dbsync = {
+  :strategy => :rsync,
+  :remote => 'username@66.123.4.567:~/dbsync/mydb.dump',
+  :local  => '../dbsync/mydb.dump'
+}
+
+config.dbsync = {
+  :strategy => :curl,
+  :remote => 'ftp://ftp.yourserver.com/dbsync/mydb.dump',
+  :bin_opts => "--netrc",
+  :local  => '../dbsync/mydb.dump'
+}
+```
+
+`bin_opts` will be passed directly to the bin command.
+
+
+### Compressed files
+Dbsync will attempt to determine if it needs to uncompress your file. `tar` and `gz` files are currently supported.
+
+
+### Database
+Currently only MySQL is supported.
 
 ### Caveats
 
