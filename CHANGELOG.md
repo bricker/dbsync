@@ -1,3 +1,7 @@
+## 1.0.0.beta1
+* Added curl support
+* Removed `clone_dump` task (use `fetch`)
+
 ## 0.3.0
 * Removed all Rails dependencies. Rails is now optional.
 * Removed scp usage. Everything uses rsync now.
