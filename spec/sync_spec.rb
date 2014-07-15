@@ -46,19 +46,6 @@ describe Dbsync::Sync do
   describe '#merge' do
   end
 
-  describe '#clone_dump' do
-    it "removes the local file and rsyncs a fresh one" do
-      # Put a dummy local file in place to make sure it gets removed
-      File.open(local_path, "w") { |f| f.write "Hello." }
-      File.read(local_path).should eq "Hello."
-
-      sync = Dbsync::Sync.new(ssh_config, db_config)
-      sync.clone_dump
-
-      File.read(local_path).should eq File.read(remote_path)
-    end
-  end
-
   describe '#pull' do
   end
 end
