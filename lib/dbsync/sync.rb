@@ -65,7 +65,6 @@ module Dbsync
       case @download
       when /\.tar/   then untar
       when /\.gz\z/  then gunzip
-      when /\.zip\z/ then unzip
       end
     end
 
