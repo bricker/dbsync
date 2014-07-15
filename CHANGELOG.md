@@ -1,3 +1,6 @@
+## 1.0.0.beta2
+* Remove old dependency
+
 ## 1.0.0.beta1
 * Added curl support
 * Removed `clone_dump` task (use `fetch`)

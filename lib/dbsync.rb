@@ -1,5 +1,4 @@
 require 'cocaine'
-require 'archive'
 require 'fileutils'
 
 require "dbsync/version"
