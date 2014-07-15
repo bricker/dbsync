@@ -42,7 +42,7 @@ Dbsync.file_config = {
 }
 
 Dbsync.db_config = {
-  :adapter  => "mysql2", # Not actually used yet
+  :adapter  => "mysql2",
   :database => "yourdb",
   :username => "youruser",
   :password => "yourcoolpassword"
@@ -79,16 +79,16 @@ rake dbsync:reset       # Drop and Create the database, then load the dump file
 
 ```ruby
 config.dbsync = {
-  :strategy => :rsync,
-  :remote => 'username@66.123.4.567:~/dbsync/mydb.dump',
-  :local  => '../dbsync/mydb.dump'
+  :strategy   => :rsync,
+  :remote     => 'username@66.123.4.567:~/dbsync/mydb.dump',
+  :local      => '../dbsync/mydb.dump'
 }
 
 config.dbsync = {
-  :strategy => :curl,
-  :remote => 'ftp://ftp.yourserver.com/dbsync/mydb.dump',
-  :bin_opts => "--netrc",
-  :local  => '../dbsync/mydb.dump'
+  :strategy   => :curl,
+  :bin_opts   => "--netrc",
+  :remote     => 'ftp://ftp.yourserver.com/dbsync/mydb.dump',
+  :local      => '../dbsync/mydb.dump'
 }
 ```
 
@@ -102,8 +102,8 @@ Dbsync will attempt to determine if it needs to uncompress your file. `tar` and 
 ### Database
 Currently only MySQL is supported.
 
-### Caveats
 
+### Caveats
 * The `merge` process doesn't clear out your database first. This is to improve performance. Therefore, any tables which you removed on the remote host won't be removed locally. To do a complete reset of your database, run `rake dbsync:reset`. This resets your database (`db:drop` and `db:create`), and then merges in the local file.
 * Rails: the test database isn't automatically updated when syncing to your development database. After a `dbsync` and before you run tests, you'll need to run `rake db:test:prepare` to setup your database.
 * Rails: your schema.rb isn't involed in `dbsync` at all. You need to manage it yourself.
