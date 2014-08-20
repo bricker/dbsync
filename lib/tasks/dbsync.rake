@@ -1,4 +1,5 @@
 # Easy database syncing for development/staging
+require 'dbsync'
 
 desc "Alias for dbsync:pull"
 task :dbsync do
@@ -20,6 +21,12 @@ namespace :dbsync do
               "be used in the production environment."
       end
     end
+
+    config = %w[ dbsync_setup.rb config/dbsync_setup.rb ].find do |path|
+      File.exists?(path)
+    end
+
+    load(config) if config
 
     @dbsync = Dbsync::Sync.new(file_config, db_config, verbose: true)
   end

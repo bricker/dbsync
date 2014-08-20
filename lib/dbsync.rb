@@ -14,7 +14,7 @@ module Dbsync
   if defined?(Rails)
     class Railtie < Rails::Railtie
       rake_tasks do
-        Dir[File.join(File.dirname(__FILE__),'tasks/*.rake')].each { |f| load f }
+        load File.expand_path("dbsync/rake_tasks.rb", __FILE__)
       end
     end
   end
