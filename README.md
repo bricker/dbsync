@@ -49,6 +49,8 @@ Dbsync.db_config = {
 }
 ```
 
+You can place this anywhere you want. If a `dbsync_setup.rb` or `config/dbsync_setup.rb` file exist in the root of your project, they will automatically be loaded. This is a good place to put your dbsync setup. It is recommneded that you do not keep this file in source control, because it probably contains sensitive information.
+
 ### The server
 
 Now just make sure you have something on the remote server updating that dumpfile. I recommend a cronjob:
@@ -75,7 +77,7 @@ rake dbsync:reset       # Drop and Create the database, then load the dump file
 
 
 ### Download strategies
-`curl` and `rsync` are currently the only two supported options. You can pass a `strategy` option to the dbsync config (`:curl` or `:rsync`) to explicitly specify which strategy to use, or Dbsync will try to infer the strategy. Right now the strategy inference is a little dodgy, so it's best to just specify explicitly.
+`curl` and `rsync` are currently the only two supported options. You can pass a `strategy` option to the dbsync config (`:curl` or `:rsync`) to explicitly specify which strategy to use, or Dbsync will try to infer the strategy. Right now the strategy inference is a little dodgy (relying on string matching), so it's best to just specify explicitly.
 
 ```ruby
 config.dbsync = {
