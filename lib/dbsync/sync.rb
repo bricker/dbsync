@@ -4,7 +4,7 @@ require 'fileutils'
 module Dbsync
   class Sync
     STRATEGY = {
-      :rsync    => Dbsync::Strategy::Rsync,
+      :rsync  => Dbsync::Strategy::Rsync,
       :curl   => Dbsync::Strategy::Curl
     }
 
@@ -15,16 +15,16 @@ module Dbsync
 
     def initialize(file_config, db_config, options={})
       @file_config  = Dbsync::Util.symbolize_keys(file_config)
-      @db_config   = Dbsync::Util.symbolize_keys(db_config)
+      @db_config    = Dbsync::Util.symbolize_keys(db_config)
 
       @verbose = !!options[:verbose]
 
       @remote           = @file_config[:remote]
       remote_filename   = File.basename(@remote)
 
-      @local          = File.expand_path(@file_config[:local])
-      local_dir       = File.dirname(@local)
-      @download       = File.join(local_dir, remote_filename)
+      @local      = File.expand_path(@file_config[:local])
+      local_dir   = File.dirname(@local)
+      @download   = File.join(local_dir, remote_filename)
 
       FileUtils.mkdir_p(local_dir)
 
