@@ -12,14 +12,15 @@ module Dbsync
         opts += "-p:password "  if password
         opts += "-h :host "     if host
 
-        line = Cocaine::CommandLine.new('mysql', "#{opts} :database < :local")
-        line.run({
+        line = Cocaine::CommandLine.new('mysql', "#{opts} :database < :local",
           :username   => username,
           :password   => password,
           :host       => host,
           :database   => database,
           :local      => @local
-        })
+        )
+
+        line.run
       end
     end
   end

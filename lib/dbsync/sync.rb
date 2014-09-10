@@ -70,13 +70,17 @@ module Dbsync
 
     # We're overwriting files by default. Is this okay? Probably not.
     def gunzip
-      line = Cocaine::CommandLine.new('gunzip', "-c :download > :local")
-      line.run(download: @download, local: @local)
+      line = Cocaine::CommandLine.new('gunzip', "-c :download > :local",
+        download: @download, local: @local)
+
+      line.run
     end
 
     def untar
-      line = Cocaine::CommandLine.new('tar', "-C :local -xf :download")
-      line.run(download: @download, local: @local)
+      line = Cocaine::CommandLine.new('tar', "-C :local -xf :download",
+        download: @download, local: @local)
+
+      line.run
     end
 
 

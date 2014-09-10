@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.executables   = `git ls-files -- bin/*`.split("\n").map{ |f| File.basename(f) }
   s.require_paths = ["lib", "lib/tasks"]
 
-  s.add_dependency "cocaine", [">= 0.5.0", "< 0.6"]
+  s.add_dependency "cocaine", [">= 0.3.0", "< 0.6"]
 
   s.add_development_dependency "bundler", ['>= 1.6', "< 2"]
 end
