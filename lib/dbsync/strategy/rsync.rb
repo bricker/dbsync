@@ -4,7 +4,7 @@ module Dbsync
       BIN = "rsync"
 
       def fetch
-        line = Cocaine::CommandLine.new(BIN, ':bin_opts :remote :local'
+        line = Cocaine::CommandLine.new(BIN, ':bin_opts :remote :local',
           :bin_opts   => @bin_opts,
           :remote     => @remote,
           :local      => @local
